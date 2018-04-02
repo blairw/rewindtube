@@ -1,0 +1,86 @@
+{% extends 'partials/base.html.twig' %}
+
+{% block content %}
+	<script>
+		let filesRoot = "../files";
+		let videosRoot = "../videos";
+		let subsRoot = "../subs";
+
+		let vKey = '{{ uri.query("v") }}';
+		$.get("../api/getVideoByVKey/?v_key=" + vKey, function(ajaxResponse) {
+			console.log(ajaxResponse);
+
+			$("#rwt_video_title").html(ajaxResponse.title);
+			$("#rwt_channel_title").html(ajaxResponse.channel_title);
+			$("#rwt_publish_date").html("Published on " + ajaxResponse.publish_date);
+			$("#rwt_channel_image").attr("src", filesRoot + "/channel_" + ajaxResponse.channel_id + ".jpg");
+			document.title = ajaxResponse.title + " - RewindTube";
+
+			videojs('rewindtube_player').ready(function () {
+                var myPlayer = this;
+                myPlayer.src({type: 'video/mp4', src: videosRoot + '/' + ajaxResponse.video_id + '.mp4'});
+                myPlayer.addRemoteTextTrack(
+					{
+						kind: "captions",
+						label: "English",
+						srclang: "en",
+						src: subsRoot + '/' + ajaxResponse.video_id + '.vtt.txt'
+					}, true
+				);
+			});
+
+			$.get("../api/getAllVideos", function(ajaxResponse) {
+				for (var i = 0; i < ajaxResponse.length; i++) {
+					let thisItem = ajaxResponse[i];
+
+					var preparedNext = ""
+					preparedNext += "<a href='watch?v=" + thisItem.v_key + "'>";
+					preparedNext += "<div class='columns'>";
+					preparedNext += "<div class='column is-two-fifths'>";
+					preparedNext += "<figure class='image is-16by9'>";
+					preparedNext += "<img src='" + filesRoot + "/video_" + thisItem.video_id + ".jpg' />";
+					preparedNext += "</figure>";
+					preparedNext += "</div>";
+					preparedNext += "<div class='column'>";
+					preparedNext += "<div class='rwt_othervideo_title'>" + thisItem.title + "</div>";
+					preparedNext += "</div>";
+					preparedNext += "</div>";
+					preparedNext += "</a>";
+
+					$("#rwt_other_videos").append(preparedNext);
+				}
+			});
+		});
+	</script>
+	
+	<div class="rwt_container">
+		<div class="columns">
+			<div class="column is-two-thirds">
+				<video id="rewindtube_player" class="video-js animate vjs-16-9 vjs-big-play-centered" controls width="100%" poster="MY_VIDEO_POSTER.jpg" data-setup='{ "playbackRates": [0.5, 1, 1.5, 2] }' autoplay>
+					<p class="vjs-no-js">
+					To view this video please enable JavaScript, and consider upgrading to a web browser that
+					<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+					</p>
+				</video>
+
+				<h1 id="rwt_video_title"></h1>
+				<hr />
+				<div id="rwt_metadata" class="columns">
+					<div class="column is-narrow">
+						<img id="rwt_channel_image" />
+					</div>
+					<div class="column">
+						<div id="rwt_channel_title"></div>
+						<div id="rwt_publish_date"></div>
+					</div>
+				</div>
+			</div>
+			<div class="column">
+				<div id="rwt_other_videos">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{{ page.content }}
+{% endblock %}
