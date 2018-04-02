@@ -1,3 +1,8 @@
+# rewindtube
+YouTube-like UI for locally stored MP4s
+
+------
+
 Root folders with code:
 
 - `api`
